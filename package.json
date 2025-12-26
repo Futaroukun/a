@@ -1,0 +1,13 @@
+{
+  "name": "Syau Wolf",
+  "version": "1.0.0",
+  "main": "syau.mjs",
+  "description": "Base made simple, from youtube @syauwolf",
+  "scripts":{
+    "start": "node syau.mjs"
+    },
+    "dependencies":{
+    "baileys": "^6.7.19",
+    "pino": "^9.9.4"
+    }
+}
