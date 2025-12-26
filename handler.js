@@ -6,6 +6,7 @@ import {
   generateWAMessageFromContent,
   proto
 } from '@whiskeysockets/baileys';
+import logger from './function/console.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const __filename = fileURLToPath(import.meta.url);
@@ -19,7 +20,7 @@ const loadPlugins = async (directory) => {
   let plugins = [];
 
   if (!fs.existsSync(directory)) {
-    console.warn(`Plugin direktori tidak ditemukan: ${directory}`);
+    logger.warn(`Plugin direktori tidak ditemukan: ${directory}`);
     return [];
   }
 
@@ -37,12 +38,12 @@ const loadPlugins = async (directory) => {
 
         if (plugin) {
           plugins.push(plugin);
-          console.log(`✅ Plugin loaded: ${item.name}`);
+          logger.plugin(item.name);
         } else {
-          console.log(`⚠️ Plugin ${fullPath} tidak memiliki export default.`);
+          logger.warn(`Plugin ${fullPath} tidak memiliki export default.`);
         }
       } catch (error) {
-        console.log(`❌ Error loading plugin ${fullPath}:`, error);
+        logger.pluginError(item.name, error);
       }
     }
   }
@@ -54,7 +55,7 @@ const loadPlugins = async (directory) => {
  */
 const watchPlugins = (pluginDir) => {
   if (!fs.existsSync(pluginDir)) {
-    console.warn(`❌ Folder plugin tidak ditemukan: ${pluginDir}`);
+    logger.warn(`Folder plugin tidak ditemukan: ${pluginDir}`);
     return;
   }
 
@@ -67,13 +68,13 @@ const watchPlugins = (pluginDir) => {
 
     const watcher = fs.watch(fullPath, async (eventType) => {
       if (eventType === 'change') {
-        console.log(`🔄 Plugin berubah: ${file}`);
+        logger.info(`Plugin berubah: ${file}`);
 
         try {
           await import(`file://${fullPath}?update=${Date.now()}`);
-          console.log(`✅ Plugin ${file} berhasil dimuat ulang`);
+          logger.success(`Plugin ${file} berhasil dimuat ulang`);
         } catch (e) {
-          console.error(`❌ Gagal reload plugin ${file}:`, e);
+          logger.error(`Gagal reload plugin ${file}`, e);
         }
       }
     });
@@ -280,14 +281,18 @@ export default async (main, m) => {
         pluginExecuted = true;
 
         if (typeof plugin !== "function") {
-          console.error(`Plugin dari command '${command}' bukan sebuah function.`);
+          logger.error(`Plugin dari command '${command}' bukan sebuah function.`);
           continue;
         }
 
         try {
+          // Log command execution
+          const fromName = m.pushName || m.sender.split('@')[0];
+          logger.cmd(fromName, command, m.isGroup);
+          
           await plugin(m, ctx);
         } catch (e) {
-          console.error(`Error saat eksekusi command: ${command}`, e);
+          logger.error(`Error saat eksekusi command: ${command}`, e);
           await reply(`❌ Terjadi error pada command ${command}:\n${e.message}`);
         }
         break;
@@ -297,13 +302,13 @@ export default async (main, m) => {
     if (pluginExecuted) return;
     
   } catch (error) {
-    console.error('Error in message handler:', error);
+    logger.error('Error in message handler', error);
   }
 };
 
 // Watch this file for changes
 fs.watchFile(__filename, () => {
   fs.unwatchFile(__filename);
-  console.log(`🔄 Memperbarui ${__filename}`);
+  logger.info(`Memperbarui ${__filename}`);
   import(`${import.meta.url}?update=${Date.now()}`);
 });

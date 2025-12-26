@@ -1,3 +1,17 @@
+/*
+- Buatan Syau Wolf
+
+Dilarang menjual, atau menghapus nama pembuat.
+youtube: @syauwolf
+
+Base Esm
+Simple
+Plugin
+Base dasar
+
+© Syau Wolf
+*/
+
 import {
   makeWASocket,
   DisconnectReason,
@@ -10,6 +24,7 @@ import fs from 'fs';
 import readline from 'readline';
 import pino from 'pino';
 import qrcode from 'qrcode-terminal';
+import logger from './function/console.js';
 
 const messageHandler = (await import('./handler.js')).default;
 
@@ -27,10 +42,12 @@ const question = (text) => {
 };
 
 async function startBot() {
+  logger.banner();
+  
   const { state, saveCreds } = await useMultiFileAuthState('session');
   const { version, isLatest } = await fetchLatestBaileysVersion();
   
-  console.log(`Using WA v${version.join('.')}, isLatest: ${isLatest}`);
+  logger.info(`Using WA v${version.join('.')}, isLatest: ${isLatest}`);
   
   const main = makeWASocket({
     version,
@@ -58,14 +75,14 @@ async function startBot() {
     if (usePairingCode.toLowerCase() === 'y') {
       const phoneNumber = await question('Nomor (dengan kode negara, contoh: 628xxx): ');
       const code = await main.requestPairingCode(phoneNumber);
-      console.log(`Kode Pairing: ${code}`);
+      logger.pairing(code);
     } else {
       // Generate QR Code di terminal
       main.ev.on('connection.update', (update) => {
         const { qr } = update;
         if (qr) {
           qrcode.generate(qr, { small: true });
-          console.log('Scan QR code di atas dengan WhatsApp kamu!');
+          logger.qr();
         }
       });
     }
@@ -77,23 +94,23 @@ async function startBot() {
     if (connection === "close") {
       const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
       
-      console.log('Koneksi tertutup karena:', lastDisconnect?.error, 'Reconnecting:', shouldReconnect);
+      logger.connection('close', `Koneksi tertutup: ${lastDisconnect?.error} | Reconnecting: ${shouldReconnect}`);
       
       if (shouldReconnect) {
-        console.log("[ SYAU WOLF ] : MEMPERBARUI KONEKSI");
+        logger.warn("Memperbarui koneksi...");
         setTimeout(() => startBot(), 3000);
       }
     }
     
     if (connection === "open") {
-      console.log("[ SYAU WOLF ]: KONEKSI TERHUBUNG ✅");
+      logger.connection('open', '✅ Koneksi terhubung!');
       await main.sendMessage('6283854551575@s.whatsapp.net', {
         text: '✅ *KONEKSI BERHASIL*\n\n_Bot Syau Wolf telah online!_\n\n*Bergabung ke grup untuk info lebih lanjut:*\nhttps://chat.whatsapp.com/BtFufKbHL9u3YEDoxJOAEa\n\n© Syau Wolf'
       });
     }
     
     if (connection === "connecting") {
-      console.log("[ SYAU WOLF ]: Menghubungkan...");
+      logger.connection('connecting', 'Menghubungkan...');
     }
   });
   
@@ -165,13 +182,13 @@ async function startBot() {
     for (const update of updates) {
       const id = update.id;
       if (update.subject) {
-        console.log(`Grup ${id} mengubah subject menjadi: ${update.subject}`);
+        logger.debug(`Grup ${id} mengubah subject menjadi: ${update.subject}`);
       }
     }
   });
   
   main.ev.on('group-participants.update', async (update) => {
-    console.log('Participant update:', update);
+    logger.debug(`Participant update: ${JSON.stringify(update)}`);
     // Handle welcome/leave messages here
   });
   
