@@ -1,13 +1,27 @@
 {
-  "name": "Syau Wolf",
+  "name": "syau-wolf-bot",
   "version": "1.0.0",
-  "main": "syau.mjs",
+  "type": "module",
+  "main": "main.js",
   "description": "Base made simple, from youtube @syauwolf",
-  "scripts":{
-    "start": "node syau.mjs"
-    },
-    "dependencies":{
-    "baileys": "^6.7.19",
-    "pino": "^9.9.4"
-    }
+  "scripts": {
+    "start": "node main.js",
+    "dev": "node --watch main.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^7.0.0-rc.9",
+    "pino": "^9.9.4",
+    "qrcode-terminal": "^0.12.0"
+  },
+  "keywords": [
+    "whatsapp",
+    "bot",
+    "baileys",
+    "esm"
+  ],
+  "author": "Syau Wolf",
+  "license": "SEE LICENSE IN LICENSE-ID-SYAU.txt"
 }
